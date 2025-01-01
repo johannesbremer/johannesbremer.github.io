@@ -78,6 +78,7 @@
             
             .countdown {
                 gap: 1rem;  /* Reduce gap between items */
+                grid-template-columns: repeat(2, 1fr);  /* Stack in 2x2 grid */
             }
             
             .countdown-container {
@@ -86,17 +87,6 @@
             }
         }
 
-        /* For very small screens */
-        @media (max-width: 350px) {
-            .countdown {
-                grid-template-columns: repeat(2, 1fr);  /* Stack in 2x2 grid */
-                gap: 1.5rem;
-            }
-            
-            .time {
-                font-size: 2rem;
-            }
-        }
     </style>
 </head>
 <body>
