@@ -93,7 +93,7 @@ export function ResultsTable({
           employee || "",
         ]
           .map((field) => `"${field}"`)
-          .join(",")
+          .join(","),
       ),
     ].join("\n");
 
@@ -240,7 +240,7 @@ export function ResultsTable({
                         minute: "2-digit",
                         month: "2-digit",
                         year: "numeric",
-                      }
+                      },
                     )}
                 </div>
             </div>
@@ -265,7 +265,7 @@ export function ResultsTable({
                         <td>${entry.endTime}</td>
                         <td class="duration">${entry.duration || ""}</td>
                     </tr>
-                `
+                `,
                   )
                   .join("")}
             </tbody>
@@ -397,7 +397,7 @@ export function ResultsTable({
                         className="w-24"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev ? { ...prev, date: e.target.value } : null
+                            prev ? { ...prev, date: e.target.value } : null,
                           );
                         }}
                         value={editData?.date || ""}
@@ -412,7 +412,9 @@ export function ResultsTable({
                         className="w-20"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev ? { ...prev, startTime: e.target.value } : null
+                            prev
+                              ? { ...prev, startTime: e.target.value }
+                              : null,
                           );
                         }}
                         value={editData?.startTime || ""}
@@ -427,7 +429,7 @@ export function ResultsTable({
                         className="w-20"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev ? { ...prev, endTime: e.target.value } : null
+                            prev ? { ...prev, endTime: e.target.value } : null,
                           );
                         }}
                         value={editData?.endTime || ""}

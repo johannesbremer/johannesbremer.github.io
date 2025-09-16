@@ -116,21 +116,21 @@ type TooltipContentProps = ComponentProps<"div"> & {
   active?: boolean;
   color?: string;
   formatter?: (
-    value: any,
-    name: any,
-    item: any,
+    value: unknown,
+    name: unknown,
+    item: unknown,
     index: number,
-    payload: any
+    payload: unknown
   ) => ReactNode;
   hideIndicator?: boolean;
   hideLabel?: boolean;
   indicator?: "dashed" | "dot" | "line";
-  label?: any;
+  label?: ReactNode | string;
   labelClassName?: string;
-  labelFormatter?: (value: any, payload: any[]) => ReactNode;
+  labelFormatter?: (value: unknown, payload: unknown[]) => ReactNode;
   labelKey?: string;
   nameKey?: string;
-  payload?: any[];
+  payload?: unknown[];
 };
 
 function ChartTooltipContent({
@@ -173,7 +173,7 @@ function ChartTooltipContent({
     if (labelFormatter) {
       return (
         <div className={cn("font-medium", labelClassName)}>
-          {labelFormatter(value, payload as unknown[])}
+          {labelFormatter(value, payload)}
         </div>
       );
     }
@@ -208,7 +208,7 @@ function ChartTooltipContent({
     >
       {nestLabel ? null : tooltipLabel}
       <div className="grid gap-1.5">
-        {payload.map((item: PayloadItem, index: number) => {
+        {(payload as PayloadItem[]).map((item: PayloadItem, index: number) => {
           const key = nameKey ?? item.name ?? item.dataKey ?? "value";
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
           const indicatorColor = color ?? item.payload?.fill ?? item.color;
@@ -221,7 +221,7 @@ function ChartTooltipContent({
               )}
               key={item.dataKey}
             >
-              {formatter && item?.value !== undefined && item.name ? (
+              {formatter && item.value !== undefined && item.name ? (
                 formatter(item.value, item.name, item, index, item.payload)
               ) : (
                 <>
@@ -263,7 +263,7 @@ function ChartTooltipContent({
                     </div>
                     {item.value !== undefined && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
-                        {(+item.value).toLocaleString()}
+                        {item.value.toLocaleString()}
                       </span>
                     )}
                   </div>
@@ -285,11 +285,13 @@ function ChartLegendContent({
   nameKey,
   payload,
   verticalAlign = "bottom",
-}: ComponentProps<"div"> &
-  Pick<any, "payload" | "verticalAlign"> & {
-    hideIcon?: boolean;
-    nameKey?: string;
-  }) {
+}: ComponentProps<"div"> & {
+  hideIcon?: boolean;
+  nameKey?: string;
+} & {
+  payload?: unknown[];
+  verticalAlign?: "bottom" | "middle" | "top";
+}) {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -304,7 +306,7 @@ function ChartLegendContent({
         className
       )}
     >
-      {(payload as unknown[]).map((raw) => {
+      {payload.map((raw) => {
         const item = raw as {
           color?: string;
           dataKey?: string;

@@ -28,7 +28,7 @@ export function calculateDuration(startTime: string, endTime: string): string {
 }
 
 export function parseTime(
-  timeStr: string,
+  timeStr: string
 ): null | { hours: number; minutes: number } {
   const cleanTime = timeStr.replaceAll(/[^\d:]/g, "");
   const match = /^(\d{1,2}):(\d{2})$/.exec(cleanTime);
@@ -36,8 +36,9 @@ export function parseTime(
   if (!match) return null;
 
   const [, hh, mm] = match;
-  const hours = Number.parseInt(hh!, 10);
-  const minutes = Number.parseInt(mm!, 10);
+  if (hh === undefined || mm === undefined) return null;
+  const hours = Number.parseInt(hh, 10);
+  const minutes = Number.parseInt(mm, 10);
 
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
 
@@ -45,7 +46,7 @@ export function parseTime(
 }
 
 export function processTimesheetEntries(
-  entries: Omit<TimesheetEntry, "duration">[],
+  entries: Omit<TimesheetEntry, "duration">[]
 ): TimesheetEntry[] {
   return entries.map((entry) => ({
     ...entry,

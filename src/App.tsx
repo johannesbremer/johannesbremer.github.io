@@ -100,7 +100,7 @@ function App() {
           let employeeDataEntry = employeeResults.find(
             (data) =>
               data.employee === result.detectedEmployee ||
-              (!data.employee && !result.detectedEmployee)
+              (!data.employee && !result.detectedEmployee),
           );
 
           if (!employeeDataEntry) {
@@ -115,7 +115,7 @@ function App() {
           processedCount++;
 
           toast.success(
-            `${processedCount}/${selectedImages.length} Bilder verarbeitet`
+            `${processedCount}/${selectedImages.length} Bilder verarbeitet`,
           );
         } catch (error_) {
           console.error(`Failed to process image ${image.name}:`, error_);
@@ -127,10 +127,10 @@ function App() {
 
       const totalEntries = employeeResults.reduce(
         (sum, data) => sum + data.entries.length,
-        0
+        0,
       );
       toast.success(
-        `${processedCount} Bilder erfolgreich verarbeitet mit ${totalEntries} Einträgen insgesamt`
+        `${processedCount} Bilder erfolgreich verarbeitet mit ${totalEntries} Einträgen insgesamt`,
       );
     } catch (error_) {
       const errorMessage =
@@ -146,20 +146,20 @@ function App() {
 
   const updateEmployeeEntries = (
     employeeIndex: number,
-    entries: TimesheetEntry[]
+    entries: TimesheetEntry[],
   ) => {
     setEmployeeData((prev) =>
       prev.map((data, index) =>
-        index === employeeIndex ? { ...data, entries } : data
-      )
+        index === employeeIndex ? { ...data, entries } : data,
+      ),
     );
   };
 
   const updateEmployeeName = (employeeIndex: number, employeeName: string) => {
     setEmployeeData((prev) =>
       prev.map((data, index) =>
-        index === employeeIndex ? { ...data, employee: employeeName } : data
-      )
+        index === employeeIndex ? { ...data, employee: employeeName } : data,
+      ),
     );
   };
 

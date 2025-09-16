@@ -15,5 +15,5 @@ createRoot(container).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     <App />
     <Toaster />
-  </ErrorBoundary>
+  </ErrorBoundary>,
 );

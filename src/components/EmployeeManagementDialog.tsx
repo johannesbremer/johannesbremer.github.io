@@ -91,8 +91,8 @@ export function EmployeeManagementDialog({
       await updateEmployee(editingEmployee.id, editingEmployee.name);
       setEmployees((prev) =>
         prev.map((emp) =>
-          emp.id === editingEmployee.id ? editingEmployee : emp
-        )
+          emp.id === editingEmployee.id ? editingEmployee : emp,
+        ),
       );
       setEditingEmployee(null);
       toast.success("Mitarbeiter erfolgreich aktualisiert");

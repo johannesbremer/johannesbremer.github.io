@@ -174,5 +174,5 @@ export default tseslint.config(
         { order: { type: "asc" }, pathPattern: "^.*$" },
       ],
     },
-  }
+  },
 );

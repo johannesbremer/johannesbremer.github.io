@@ -55,7 +55,7 @@ export function ApiKeyDialog({
       setError(
         error_ instanceof Error
           ? error_.message
-          : "Fehler beim Speichern des API-Schlüssels"
+          : "Fehler beim Speichern des API-Schlüssels",
       );
     } finally {
       setIsLoading(false);

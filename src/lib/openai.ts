@@ -58,7 +58,8 @@ Regeln:
       response_format: { type: "json_object" },
     });
 
-    const result = response.choices[0]?.message?.content;
+    const firstChoice = response.choices[0];
+    const result = firstChoice?.message ? firstChoice.message.content : null;
     if (!result) {
       throw new Error("Keine Antwort von OpenAI");
     }
@@ -161,18 +162,22 @@ Regeln:
         response_format: { type: "json_object" },
       });
 
-      const result = response.choices[0]?.message?.content;
+      const firstChoice = response.choices[0];
+      const result = firstChoice?.message ? firstChoice.message.content : null;
       if (!result) {
         throw new Error("Keine Antwort von OpenAI");
       }
 
-      const parsed = JSON.parse(result);
-
-      if (!parsed.employee || typeof parsed.employee !== "string") {
+      const parsed: unknown = JSON.parse(result);
+      if (!parsed || typeof parsed !== "object" || !("employee" in parsed)) {
         throw new Error("Ungültige Mitarbeiter-Identifikationsantwort");
       }
+      const employeeProp = (parsed as { employee: unknown }).employee;
+      if (typeof employeeProp !== "string") {
+        throw new TypeError("Ungültige Mitarbeiter-Identifikationsantwort");
+      }
 
-      const employeeName = parsed.employee.toLowerCase();
+      const employeeName = employeeProp.toLowerCase();
       if (employeeName === "unknown") {
         return null;
       }
@@ -181,7 +186,6 @@ Regeln:
       const matchedEmployee = employees.find(
         (emp) => emp.name.toLowerCase() === employeeName
       );
-
       return matchedEmployee ? matchedEmployee.name : null;
     } catch (error) {
       lastError =

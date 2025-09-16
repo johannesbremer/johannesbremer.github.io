@@ -29,13 +29,13 @@ export function ImageUpload({
       setIsDragOver(false);
 
       const files = [...e.dataTransfer.files].filter((file) =>
-        file.type.startsWith("image/")
+        file.type.startsWith("image/"),
       );
       if (files.length > 0) {
         onImagesSelect([...selectedImages, ...files]);
       }
     },
-    [onImagesSelect, selectedImages]
+    [onImagesSelect, selectedImages],
   );
 
   const handleFileInput = useCallback(
@@ -43,12 +43,12 @@ export function ImageUpload({
       const files = e.target.files;
       if (files && files.length > 0) {
         const imageFiles = [...files].filter((file) =>
-          file.type.startsWith("image/")
+          file.type.startsWith("image/"),
         );
         onImagesSelect([...selectedImages, ...imageFiles]);
       }
     },
-    [onImagesSelect, selectedImages]
+    [onImagesSelect, selectedImages],
   );
 
   const removeImage = useCallback(
@@ -56,7 +56,7 @@ export function ImageUpload({
       const newImages = selectedImages.filter((_, i) => i !== index);
       onImagesSelect(newImages);
     },
-    [onImagesSelect, selectedImages]
+    [onImagesSelect, selectedImages],
   );
 
   return (
@@ -68,7 +68,7 @@ export function ImageUpload({
             isDragOver ? "border-primary bg-primary/5" : "border-border",
             selectedImages.length > 0
               ? "border-solid border-primary bg-primary/5"
-              : ""
+              : "",
           )}
           onDragLeave={() => {
             setIsDragOver(false);
