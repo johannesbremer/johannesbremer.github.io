@@ -1,4 +1,4 @@
-import { Plus, Trash } from "@phosphor-icons/react";
+import { PlusIcon as Plus, TrashIcon as Trash } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   addEmployee,
-  Employee,
+  type Employee,
   getEmployees,
   removeEmployee,
   updateEmployee,
@@ -35,7 +35,7 @@ export function EmployeeManagementDialog({
 
   useEffect(() => {
     if (open) {
-      loadEmployees();
+      void loadEmployees();
     }
   }, [open]);
 
@@ -91,8 +91,8 @@ export function EmployeeManagementDialog({
       await updateEmployee(editingEmployee.id, editingEmployee.name);
       setEmployees((prev) =>
         prev.map((emp) =>
-          emp.id === editingEmployee.id ? editingEmployee : emp,
-        ),
+          emp.id === editingEmployee.id ? editingEmployee : emp
+        )
       );
       setEditingEmployee(null);
       toast.success("Mitarbeiter erfolgreich aktualisiert");
@@ -103,12 +103,12 @@ export function EmployeeManagementDialog({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       if (editingEmployee) {
-        handleUpdateEmployee();
+        void handleUpdateEmployee();
       } else {
-        handleAddEmployee();
+        void handleAddEmployee();
       }
     }
   };
@@ -133,7 +133,7 @@ export function EmployeeManagementDialog({
                   onChange={(e) => {
                     setNewEmployeeName(e.target.value);
                   }}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Mitarbeitername eingeben"
                   value={newEmployeeName}
                 />
@@ -141,7 +141,7 @@ export function EmployeeManagementDialog({
               <Button
                 className="w-full"
                 disabled={isLoading || !newEmployeeName.trim()}
-                onClick={handleAddEmployee}
+                onClick={() => void handleAddEmployee()}
               >
                 <Plus className="mr-2" size={16} />
                 Mitarbeiter hinzufügen
@@ -175,14 +175,14 @@ export function EmployeeManagementDialog({
                               name: e.target.value,
                             });
                           }}
-                          onKeyPress={handleKeyPress}
+                          onKeyDown={handleKeyDown}
                           placeholder="Mitarbeitername"
                           value={editingEmployee.name}
                         />
                         <div className="flex gap-2">
                           <Button
                             disabled={isLoading}
-                            onClick={handleUpdateEmployee}
+                            onClick={() => void handleUpdateEmployee()}
                             size="sm"
                           >
                             Speichern
@@ -211,7 +211,7 @@ export function EmployeeManagementDialog({
                         </div>
                         <Button
                           disabled={isLoading}
-                          onClick={() => handleRemoveEmployee(employee.id)}
+                          onClick={() => void handleRemoveEmployee(employee.id)}
                           size="sm"
                           variant="outline"
                         >

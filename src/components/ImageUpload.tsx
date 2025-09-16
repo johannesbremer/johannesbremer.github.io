@@ -1,4 +1,7 @@
-import { CloudArrowUp, X } from "@phosphor-icons/react";
+import {
+  CloudArrowUpIcon as CloudArrowUp,
+  XIcon as X,
+} from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,13 +29,13 @@ export function ImageUpload({
       setIsDragOver(false);
 
       const files = [...e.dataTransfer.files].filter((file) =>
-        file.type.startsWith("image/"),
+        file.type.startsWith("image/")
       );
       if (files.length > 0) {
         onImagesSelect([...selectedImages, ...files]);
       }
     },
-    [onImagesSelect, selectedImages],
+    [onImagesSelect, selectedImages]
   );
 
   const handleFileInput = useCallback(
@@ -40,12 +43,12 @@ export function ImageUpload({
       const files = e.target.files;
       if (files && files.length > 0) {
         const imageFiles = [...files].filter((file) =>
-          file.type.startsWith("image/"),
+          file.type.startsWith("image/")
         );
         onImagesSelect([...selectedImages, ...imageFiles]);
       }
     },
-    [onImagesSelect, selectedImages],
+    [onImagesSelect, selectedImages]
   );
 
   const removeImage = useCallback(
@@ -53,7 +56,7 @@ export function ImageUpload({
       const newImages = selectedImages.filter((_, i) => i !== index);
       onImagesSelect(newImages);
     },
-    [onImagesSelect, selectedImages],
+    [onImagesSelect, selectedImages]
   );
 
   return (
@@ -65,7 +68,7 @@ export function ImageUpload({
             isDragOver ? "border-primary bg-primary/5" : "border-border",
             selectedImages.length > 0
               ? "border-solid border-primary bg-primary/5"
-              : "",
+              : ""
           )}
           onDragLeave={() => {
             setIsDragOver(false);
@@ -79,25 +82,31 @@ export function ImageUpload({
           {selectedImages.length > 0 ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {selectedImages.map((image, index) => (
-                  <div className="relative" key={index}>
-                    <img
-                      alt={`Timesheet ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg shadow-sm"
-                      src={URL.createObjectURL(image)}
-                    />
-                    <Button
-                      className="absolute -top-2 -right-2 rounded-full w-6 h-6 p-0"
-                      onClick={() => {
-                        removeImage(index);
-                      }}
-                      size="sm"
-                      variant="destructive"
-                    >
-                      <X size={12} />
-                    </Button>
-                  </div>
-                ))}
+                {selectedImages.map((image, index) => {
+                  const objectUrl = URL.createObjectURL(image);
+                  return (
+                    <div className="relative" key={index}>
+                      <img
+                        alt={`Timesheet ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg shadow-sm"
+                        onLoad={() => {
+                          URL.revokeObjectURL(objectUrl);
+                        }}
+                        src={objectUrl}
+                      />
+                      <Button
+                        className="absolute -top-2 -right-2 rounded-full w-6 h-6 p-0"
+                        onClick={() => {
+                          removeImage(index);
+                        }}
+                        size="sm"
+                        variant="destructive"
+                      >
+                        <X size={12} />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
               <p className="text-sm text-muted-foreground">
                 {selectedImages.length} Bild

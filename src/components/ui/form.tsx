@@ -1,6 +1,6 @@
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
-import { ComponentProps, createContext, useContext, useId } from "react";
+import { type ComponentProps, createContext, useContext, useId } from "react";
 import {
   Controller,
   type ControllerProps,
@@ -24,7 +24,7 @@ interface FormFieldContextValue<
 }
 
 const FormFieldContext = createContext<FormFieldContextValue>(
-  {} as FormFieldContextValue,
+  {} as FormFieldContextValue
 );
 
 const FormField = <
@@ -47,9 +47,7 @@ const useFormField = () => {
   const formState = useFormState({ name: fieldContext.name });
   const fieldState = getFieldState(fieldContext.name, formState);
 
-  if (!fieldContext) {
-    throw new Error("useFormField should be used within <FormField>");
-  }
+  // fieldContext is always defined due to default value in createContext
 
   const { id } = itemContext;
 
@@ -68,7 +66,7 @@ interface FormItemContextValue {
 }
 
 const FormItemContext = createContext<FormItemContextValue>(
-  {} as FormItemContextValue,
+  {} as FormItemContextValue
 );
 
 function FormControl({ ...props }: ComponentProps<typeof Slot>) {
@@ -134,7 +132,7 @@ function FormLabel({
 
 function FormMessage({ className, ...props }: ComponentProps<"p">) {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message ?? "") : props.children;
+  const body = error ? (error.message ?? "") : props.children;
 
   if (!body) {
     return null;

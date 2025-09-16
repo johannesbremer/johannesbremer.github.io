@@ -29,7 +29,6 @@ export default tseslint.config(
   jsdoc.configs["flat/logical-typescript-error"],
   jsdoc.configs["flat/stylistic-typescript-error"],
   jsonc.configs["flat/recommended-with-json"],
-  n.configs["flat/recommended"],
   packageJson.configs.recommended,
   perfectionist.configs["recommended-natural"],
   regexp.configs["flat/recommended"],
@@ -39,7 +38,7 @@ export default tseslint.config(
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
     ],
-    files: ["**/*.{js,ts,jsx,tsx}"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         ecmaFeatures: { jsx: true },
@@ -96,24 +95,13 @@ export default tseslint.config(
         "always",
         { enforceForIfStatements: true },
       ],
-      "n/no-unsupported-features/node-builtins": ["error"],
+      // Node rules handled in Node-specific overrides below
       "no-useless-rename": "error",
       "object-shorthand": "error",
       "operator-assignment": "error",
-      "n/no-missing-import": [
-        "error",
-        {
-          tryExtensions: [
-            ".js",
-            ".jsx",
-            ".json",
-            ".node",
-            ".ts",
-            ".tsx",
-            ".d.ts",
-          ],
-        },
-      ],
+      // import checks handled by TS and bundler
+      // Relax filename casing to allow PascalCase for React components
+      "unicorn/filename-case": "off",
     },
     settings: {
       perfectionist: { partitionByComment: true, type: "natural" },
@@ -123,12 +111,53 @@ export default tseslint.config(
       },
     },
   },
+  // Untyped JS/JSX files (apply basic React rules without TS type-checking)
+  {
+    files: ["**/*.{js,jsx}"],
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+      globals: { ...globals.browser },
+    },
+    plugins: { react: reactPlugin },
+    rules: {
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat["jsx-runtime"].rules,
+      "react/prop-types": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/jsx-uses-react": "off",
+      // Relax filename casing to allow PascalCase for React components
+      "unicorn/filename-case": "off",
+    },
+  },
   {
     extends: [vitest.configs.recommended],
     files: ["**/*.test.*"],
     rules: {
       "@typescript-eslint/no-unsafe-assignment": "off",
       "unicorn/consistent-function-scoping": "off",
+    },
+  },
+  // Node / config files
+  {
+    files: [
+      "**/*.{config,conf}.{js,cjs,mjs,ts}",
+      "vite.config.ts",
+      "eslint.config.js",
+      "tailwind.config.js",
+      "scripts/**/*.{js,ts}",
+    ],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    plugins: {
+      n,
+    },
+    extends: [n.configs["flat/recommended"]],
+    rules: {
+      // Keep Node built-ins compatibility checks for Node files only
+      "n/no-unsupported-features/node-builtins": ["error"],
     },
   },
   {
@@ -145,5 +174,5 @@ export default tseslint.config(
         { order: { type: "asc" }, pathPattern: "^.*$" },
       ],
     },
-  },
+  }
 );

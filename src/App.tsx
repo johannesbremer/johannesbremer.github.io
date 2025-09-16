@@ -1,4 +1,8 @@
-import { CurrencyEur, Gear, Users } from "@phosphor-icons/react";
+import {
+  CurrencyEurIcon as CurrencyEur,
+  GearIcon as Gear,
+  UsersIcon as Users,
+} from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,7 +16,7 @@ import { WageDialog } from "@/components/WageDialog";
 import { getApiKey, setApiKey } from "@/lib/api-key";
 import { getEmployees } from "@/lib/employees";
 import { processTimesheetImage } from "@/lib/openai";
-import { processTimesheetEntries, TimesheetEntry } from "@/lib/timesheet";
+import { processTimesheetEntries, type TimesheetEntry } from "@/lib/timesheet";
 import { getWage } from "@/lib/wage";
 
 // Group entries by employee
@@ -33,8 +37,8 @@ function App() {
   const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
-    loadApiKey();
-    loadWage();
+    void loadApiKey();
+    void loadWage();
   }, []);
 
   const loadApiKey = async () => {
@@ -96,7 +100,7 @@ function App() {
           let employeeDataEntry = employeeResults.find(
             (data) =>
               data.employee === result.detectedEmployee ||
-              (!data.employee && !result.detectedEmployee),
+              (!data.employee && !result.detectedEmployee)
           );
 
           if (!employeeDataEntry) {
@@ -111,7 +115,7 @@ function App() {
           processedCount++;
 
           toast.success(
-            `${processedCount}/${selectedImages.length} Bilder verarbeitet`,
+            `${processedCount}/${selectedImages.length} Bilder verarbeitet`
           );
         } catch (error_) {
           console.error(`Failed to process image ${image.name}:`, error_);
@@ -123,10 +127,10 @@ function App() {
 
       const totalEntries = employeeResults.reduce(
         (sum, data) => sum + data.entries.length,
-        0,
+        0
       );
       toast.success(
-        `${processedCount} Bilder erfolgreich verarbeitet mit ${totalEntries} Einträgen insgesamt`,
+        `${processedCount} Bilder erfolgreich verarbeitet mit ${totalEntries} Einträgen insgesamt`
       );
     } catch (error_) {
       const errorMessage =
@@ -142,20 +146,20 @@ function App() {
 
   const updateEmployeeEntries = (
     employeeIndex: number,
-    entries: TimesheetEntry[],
+    entries: TimesheetEntry[]
   ) => {
     setEmployeeData((prev) =>
       prev.map((data, index) =>
-        index === employeeIndex ? { ...data, entries } : data,
-      ),
+        index === employeeIndex ? { ...data, entries } : data
+      )
     );
   };
 
   const updateEmployeeName = (employeeIndex: number, employeeName: string) => {
     setEmployeeData((prev) =>
       prev.map((data, index) =>
-        index === employeeIndex ? { ...data, employee: employeeName } : data,
-      ),
+        index === employeeIndex ? { ...data, employee: employeeName } : data
+      )
     );
   };
 
@@ -217,7 +221,9 @@ function App() {
           <ImageUpload
             isProcessing={isProcessing}
             onImagesSelect={setSelectedImages}
-            onProcess={handleProcessImages}
+            onProcess={() => {
+              void handleProcessImages();
+            }}
             selectedImages={selectedImages}
           />
 

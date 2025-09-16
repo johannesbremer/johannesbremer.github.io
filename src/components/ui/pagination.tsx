@@ -1,7 +1,8 @@
+import type { ComponentProps } from "react";
+
 import ChevronLeftIcon from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRightIcon from "lucide-react/dist/esm/icons/chevron-right";
 import MoreHorizontalIcon from "lucide-react/dist/esm/icons/more-horizontal";
-import { ComponentProps } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

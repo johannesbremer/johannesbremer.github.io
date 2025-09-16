@@ -1,5 +1,6 @@
+import type { ComponentProps } from "react";
+
 import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio";
-import { ComponentProps } from "react";
 
 function AspectRatio({
   ...props

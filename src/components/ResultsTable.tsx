@@ -1,9 +1,9 @@
 import {
-  ArrowSquareOut,
-  Check,
-  Download,
-  PencilSimple,
-  X,
+  ArrowSquareOutIcon as ArrowSquareOut,
+  CheckIcon as Check,
+  DownloadIcon as Download,
+  PencilSimpleIcon as PencilSimple,
+  XIcon as X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 
@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { calculateDuration, TimesheetEntry } from "@/lib/timesheet";
+import { calculateDuration, type TimesheetEntry } from "@/lib/timesheet";
 import { parseDurationToHours } from "@/lib/wage";
 
 interface ResultsTableProps {
@@ -44,7 +44,7 @@ export function ResultsTable({
 
   const startEdit = (index: number) => {
     setEditingRow(index);
-    setEditData({ ...entries[index] });
+    setEditData({ ...entries[index] } as TimesheetEntry);
   };
 
   const cancelEdit = () => {
@@ -93,7 +93,7 @@ export function ResultsTable({
           employee || "",
         ]
           .map((field) => `"${field}"`)
-          .join(","),
+          .join(",")
       ),
     ].join("\n");
 
@@ -240,7 +240,7 @@ export function ResultsTable({
                         minute: "2-digit",
                         month: "2-digit",
                         year: "numeric",
-                      },
+                      }
                     )}
                 </div>
             </div>
@@ -265,7 +265,7 @@ export function ResultsTable({
                         <td>${entry.endTime}</td>
                         <td class="duration">${entry.duration || ""}</td>
                     </tr>
-                `,
+                `
                   )
                   .join("")}
             </tbody>
@@ -278,14 +278,15 @@ export function ResultsTable({
 </body>
 </html>`;
 
-    newWindow.document.write(htmlContent);
+    newWindow.document.open();
+    newWindow.document.documentElement.innerHTML = htmlContent;
     newWindow.document.close();
   };
 
-  const totalHours = entries.reduce((total, entry) => {
-    if (!entry.duration) return total;
-    return total + parseDurationToHours(entry.duration);
-  }, 0);
+  let totalHours = 0;
+  for (const entry of entries) {
+    if (entry.duration) totalHours += parseDurationToHours(entry.duration);
+  }
 
   const totalWage = totalHours * hourlyWage;
 
@@ -396,7 +397,7 @@ export function ResultsTable({
                         className="w-24"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev ? { ...prev, date: e.target.value } : null,
+                            prev ? { ...prev, date: e.target.value } : null
                           );
                         }}
                         value={editData?.date || ""}
@@ -411,9 +412,7 @@ export function ResultsTable({
                         className="w-20"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev
-                              ? { ...prev, startTime: e.target.value }
-                              : null,
+                            prev ? { ...prev, startTime: e.target.value } : null
                           );
                         }}
                         value={editData?.startTime || ""}
@@ -428,7 +427,7 @@ export function ResultsTable({
                         className="w-20"
                         onChange={(e) => {
                           setEditData((prev) =>
-                            prev ? { ...prev, endTime: e.target.value } : null,
+                            prev ? { ...prev, endTime: e.target.value } : null
                           );
                         }}
                         value={editData?.endTime || ""}

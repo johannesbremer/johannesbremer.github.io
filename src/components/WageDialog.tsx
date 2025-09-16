@@ -28,7 +28,7 @@ export function WageDialog({
 
   useEffect(() => {
     if (open) {
-      loadWage();
+      void loadWage();
     }
   }, [open]);
 
@@ -44,7 +44,7 @@ export function WageDialog({
   const handleSave = async () => {
     const numericWage = Number.parseFloat(wageValue);
 
-    if (isNaN(numericWage) || numericWage < 0) {
+    if (Number.isNaN(numericWage) || numericWage < 0) {
       toast.error("Bitte geben Sie einen gültigen Lohnbetrag ein");
       return;
     }
@@ -62,9 +62,9 @@ export function WageDialog({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSave();
+      void handleSave();
     }
   };
 
@@ -85,7 +85,7 @@ export function WageDialog({
               onChange={(e) => {
                 setWageValue(e.target.value);
               }}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Stundenlohn eingeben (z.B. 25,50)"
               step="0.01"
               type="number"
@@ -97,7 +97,7 @@ export function WageDialog({
             <Button
               className="flex-1"
               disabled={isLoading || !wageValue.trim()}
-              onClick={handleSave}
+              onClick={() => void handleSave()}
             >
               Lohn speichern
             </Button>

@@ -21,7 +21,7 @@ export async function addEmployee(name: string): Promise<Employee> {
 
 export async function getEmployees(): Promise<Employee[]> {
   try {
-    return (await get(EMPLOYEES_STORAGE_KEY)) || [];
+    return (await get(EMPLOYEES_STORAGE_KEY)) ?? [];
   } catch (error) {
     console.error("Failed to get employees:", error);
     return [];
@@ -47,11 +47,11 @@ export async function updateEmployee(id: string, name: string): Promise<void> {
   const employees = await getEmployees();
   const index = employees.findIndex((emp) => emp.id === id);
 
-  if (index !== -1) {
-    employees[index] = {
-      ...employees[index],
-      name: name.trim(),
-    };
-    await setEmployees(employees);
-  }
+  if (index === -1) return;
+
+  const current = employees[index];
+  if (!current) return;
+  const updated: Employee = { id: current.id, name: name.trim() };
+  employees[index] = updated;
+  await setEmployees(employees);
 }

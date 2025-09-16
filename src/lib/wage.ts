@@ -19,7 +19,9 @@ export async function getWage(): Promise<number> {
 }
 
 export function parseDurationToHours(duration: string): number {
-  const [hours, minutes] = duration.split(":").map(Number);
+  const [hoursRaw, minutesRaw] = duration.split(":");
+  const hours = Number.parseInt(hoursRaw ?? "0", 10);
+  const minutes = Number.parseInt(minutesRaw ?? "0", 10);
   return hours + minutes / 60;
 }
 

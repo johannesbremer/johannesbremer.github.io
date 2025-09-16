@@ -1,9 +1,11 @@
+import type { FallbackProps } from "react-error-boundary";
+
 import { AlertTriangleIcon, RefreshCwIcon } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 import { Button } from "./components/ui/button";
 
-export const ErrorFallback = ({ error, resetErrorBoundary }) => {
+export const ErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
   // When encountering an error in the development mode, rethrow it and don't display the boundary.
   // The parent UI will take care of showing a more helpful dialog.
   if (import.meta.env.DEV) throw error;
@@ -26,7 +28,9 @@ export const ErrorFallback = ({ error, resetErrorBoundary }) => {
             Error Details:
           </h3>
           <pre className="text-xs text-destructive bg-muted/50 p-3 rounded border overflow-auto max-h-32">
-            {error.message}
+            {typeof error === "object" && error && "message" in error
+              ? (error as Error).message
+              : `${error}`}
           </pre>
         </div>
 

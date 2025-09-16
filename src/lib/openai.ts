@@ -1,12 +1,12 @@
 import OpenAI from "openai";
 
-import { Employee } from "./employees";
-import { TimesheetEntry } from "./timesheet";
+import type { Employee } from "./employees";
+import type { TimesheetEntry } from "./timesheet";
 
 export async function processTimesheetImage(
   apiKey: string,
   imageFile: File,
-  employees: Employee[],
+  employees: Employee[]
 ): Promise<{ detectedEmployee: null | string; entries: TimesheetEntry[] }> {
   const openai = new OpenAI({
     apiKey,
@@ -63,10 +63,13 @@ Regeln:
       throw new Error("Keine Antwort von OpenAI");
     }
 
-    const parsed = JSON.parse(result);
-
-    if (!parsed.entries || !Array.isArray(parsed.entries)) {
+    const parsed: unknown = JSON.parse(result);
+    if (!parsed || typeof parsed !== "object" || !("entries" in parsed)) {
       throw new Error("Ungültiges Antwortformat von OpenAI");
+    }
+    const entries = (parsed as { entries: unknown }).entries;
+    if (!Array.isArray(entries)) {
+      throw new TypeError("Ungültiges Antwortformat von OpenAI");
     }
 
     // Get employee identification
@@ -74,17 +77,17 @@ Regeln:
       openai,
       base64Image,
       imageFile.type,
-      employees,
+      employees
     );
 
     return {
       detectedEmployee,
-      entries: parsed.entries as TimesheetEntry[],
+      entries: entries as TimesheetEntry[],
     };
   } catch (error) {
     console.error("OpenAI API Fehler:", error);
     throw new Error(
-      `Fehler beim Verarbeiten des Bildes: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`,
+      `Fehler beim Verarbeiten des Bildes: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`
     );
   }
 }
@@ -94,10 +97,13 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       const result = reader.result as string;
-      const base64 = result.split(",")[1];
+      const parts = result.split(",");
+      const base64 = parts[1] ?? "";
       resolve(base64);
     });
-    reader.onerror = reject;
+    reader.addEventListener("error", () => {
+      reject(new Error("Dateilesefehler"));
+    });
     reader.readAsDataURL(file);
   });
 }
@@ -106,7 +112,7 @@ async function identifyEmployee(
   openai: OpenAI,
   base64Image: string,
   imageType: string,
-  employees: Employee[],
+  employees: Employee[]
 ): Promise<null | string> {
   if (employees.length === 0) {
     return null;
@@ -173,7 +179,7 @@ Regeln:
 
       // Find matching employee (case-insensitive)
       const matchedEmployee = employees.find(
-        (emp) => emp.name.toLowerCase() === employeeName,
+        (emp) => emp.name.toLowerCase() === employeeName
       );
 
       return matchedEmployee ? matchedEmployee.name : null;
@@ -182,12 +188,12 @@ Regeln:
         error instanceof Error ? error : new Error("Unbekannter Fehler");
       console.warn(
         `Mitarbeiter-Identifikationsversuch ${attempt} fehlgeschlagen:`,
-        lastError.message,
+        lastError.message
       );
 
       if (attempt === maxRetries) {
         console.error(
-          "Alle Mitarbeiter-Identifikationsversuche fehlgeschlagen",
+          "Alle Mitarbeiter-Identifikationsversuche fehlgeschlagen"
         );
         return null;
       }

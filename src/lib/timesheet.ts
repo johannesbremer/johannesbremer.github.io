@@ -35,8 +35,9 @@ export function parseTime(
 
   if (!match) return null;
 
-  const hours = Number.parseInt(match[1], 10);
-  const minutes = Number.parseInt(match[2], 10);
+  const [, hh, mm] = match;
+  const hours = Number.parseInt(hh!, 10);
+  const minutes = Number.parseInt(mm!, 10);
 
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
 

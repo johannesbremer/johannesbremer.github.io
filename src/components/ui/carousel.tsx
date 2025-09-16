@@ -6,9 +6,9 @@ import useEmblaCarousel, {
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import {
-  ComponentProps,
+  type ComponentProps,
   createContext,
-  KeyboardEvent,
+  type KeyboardEvent,
   useCallback,
   useContext,
   useEffect,
@@ -55,7 +55,7 @@ function Carousel({
       ...opts,
       axis: orientation === "horizontal" ? "x" : "y",
     },
-    plugins,
+    plugins
   );
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
@@ -84,7 +84,7 @@ function Carousel({
         scrollNext();
       }
     },
-    [scrollPrev, scrollNext],
+    [scrollPrev, scrollNext]
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ function Carousel({
     api.on("select", onSelect);
 
     return () => {
-      api?.off("select", onSelect);
+      api.off("select", onSelect);
     };
   }, [api, onSelect]);
 
@@ -111,8 +111,7 @@ function Carousel({
         canScrollPrev,
         carouselRef,
         opts,
-        orientation:
-          orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+        orientation: opts?.axis === "y" ? "vertical" : "horizontal",
         scrollNext,
         scrollPrev,
       }}
@@ -144,7 +143,7 @@ function CarouselContent({ className, ...props }: ComponentProps<"div">) {
         className={cn(
           "flex",
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
-          className,
+          className
         )}
         {...props}
       />
@@ -161,7 +160,7 @@ function CarouselItem({ className, ...props }: ComponentProps<"div">) {
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",
         orientation === "horizontal" ? "pl-4" : "pt-4",
-        className,
+        className
       )}
       data-slot="carousel-item"
       role="group"
@@ -185,7 +184,7 @@ function CarouselNext({
         orientation === "horizontal"
           ? "top-1/2 -right-12 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
-        className,
+        className
       )}
       data-slot="carousel-next"
       disabled={!canScrollNext}
@@ -215,7 +214,7 @@ function CarouselPrevious({
         orientation === "horizontal"
           ? "top-1/2 -left-12 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
-        className,
+        className
       )}
       data-slot="carousel-previous"
       disabled={!canScrollPrev}

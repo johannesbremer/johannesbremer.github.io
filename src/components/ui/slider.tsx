@@ -1,7 +1,9 @@
 "use client";
 
+import type { ComponentProps } from "react";
+
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { ComponentProps, useMemo } from "react";
+import { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -30,10 +32,10 @@ function Slider({
         className,
       )}
       data-slot="slider"
-      defaultValue={defaultValue}
+      {...(defaultValue === undefined ? {} : { defaultValue })}
       max={max}
       min={min}
-      value={value}
+      {...(value === undefined ? {} : { value })}
       {...props}
     >
       <SliderPrimitive.Track

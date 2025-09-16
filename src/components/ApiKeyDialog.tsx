@@ -1,4 +1,8 @@
-import { Eye, EyeSlash, Gear } from "@phosphor-icons/react";
+import {
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeSlash,
+  GearIcon as Gear,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,7 +55,7 @@ export function ApiKeyDialog({
       setError(
         error_ instanceof Error
           ? error_.message
-          : "Fehler beim Speichern des API-Schlüssels",
+          : "Fehler beim Speichern des API-Schlüssels"
       );
     } finally {
       setIsLoading(false);
@@ -134,7 +138,7 @@ export function ApiKeyDialog({
             <Button
               className="flex-1"
               disabled={isLoading}
-              onClick={handleSave}
+              onClick={() => void handleSave()}
             >
               {isLoading ? "Speichern..." : "Schlüssel speichern"}
             </Button>
