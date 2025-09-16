@@ -10,7 +10,9 @@ import "./styles/theme.css";
 import "./index.css";
 
 const container = document.querySelector("#root");
-if (!container) throw new Error("#root container not found");
+if (!container) {
+  throw new Error("#root container not found");
+}
 createRoot(container).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     <App />

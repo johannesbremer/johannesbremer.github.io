@@ -47,10 +47,14 @@ export async function updateEmployee(id: string, name: string): Promise<void> {
   const employees = await getEmployees();
   const index = employees.findIndex((emp) => emp.id === id);
 
-  if (index === -1) return;
+  if (index === -1) {
+    return;
+  }
 
   const current = employees[index];
-  if (!current) return;
+  if (!current) {
+    return;
+  }
   const updated: Employee = { id: current.id, name: name.trim() };
   employees[index] = updated;
   await setEmployees(employees);

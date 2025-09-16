@@ -6,7 +6,7 @@ import type { TimesheetEntry } from "./timesheet";
 export async function processTimesheetImage(
   apiKey: string,
   imageFile: File,
-  employees: Employee[]
+  employees: Employee[],
 ): Promise<{ detectedEmployee: null | string; entries: TimesheetEntry[] }> {
   const openai = new OpenAI({
     apiKey,
@@ -78,7 +78,7 @@ Regeln:
       openai,
       base64Image,
       imageFile.type,
-      employees
+      employees,
     );
 
     return {
@@ -88,7 +88,7 @@ Regeln:
   } catch (error) {
     console.error("OpenAI API Fehler:", error);
     throw new Error(
-      `Fehler beim Verarbeiten des Bildes: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`
+      `Fehler beim Verarbeiten des Bildes: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`,
     );
   }
 }
@@ -113,7 +113,7 @@ async function identifyEmployee(
   openai: OpenAI,
   base64Image: string,
   imageType: string,
-  employees: Employee[]
+  employees: Employee[],
 ): Promise<null | string> {
   if (employees.length === 0) {
     return null;
@@ -184,7 +184,7 @@ Regeln:
 
       // Find matching employee (case-insensitive)
       const matchedEmployee = employees.find(
-        (emp) => emp.name.toLowerCase() === employeeName
+        (emp) => emp.name.toLowerCase() === employeeName,
       );
       return matchedEmployee ? matchedEmployee.name : null;
     } catch (error) {
@@ -192,12 +192,12 @@ Regeln:
         error instanceof Error ? error : new Error("Unbekannter Fehler");
       console.warn(
         `Mitarbeiter-Identifikationsversuch ${attempt} fehlgeschlagen:`,
-        lastError.message
+        lastError.message,
       );
 
       if (attempt === maxRetries) {
         console.error(
-          "Alle Mitarbeiter-Identifikationsversuche fehlgeschlagen"
+          "Alle Mitarbeiter-Identifikationsversuche fehlgeschlagen",
         );
         return null;
       }

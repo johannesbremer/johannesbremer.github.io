@@ -108,7 +108,9 @@ export function ResultsTable({
 
   const openInNewTab = () => {
     const newWindow = window.open("", "_blank");
-    if (!newWindow) return;
+    if (!newWindow) {
+      return;
+    }
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -285,7 +287,9 @@ export function ResultsTable({
 
   let totalHours = 0;
   for (const entry of entries) {
-    if (entry.duration) totalHours += parseDurationToHours(entry.duration);
+    if (entry.duration) {
+      totalHours += parseDurationToHours(entry.duration);
+    }
   }
 
   const totalWage = totalHours * hourlyWage;
