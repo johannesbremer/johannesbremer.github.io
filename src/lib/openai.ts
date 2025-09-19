@@ -38,7 +38,6 @@ Regeln:
 
   try {
     const response = await openai.chat.completions.create({
-      max_tokens: 1000,
       messages: [
         {
           content: [
@@ -54,7 +53,7 @@ Regeln:
           role: "user",
         },
       ],
-      model: "gpt-4o",
+      model: "gpt-5",
       response_format: { type: "json_object" },
     });
 
@@ -142,7 +141,6 @@ Regeln:
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        max_tokens: 300,
         messages: [
           {
             content: [
@@ -158,7 +156,7 @@ Regeln:
             role: "user",
           },
         ],
-        model: "gpt-4o",
+        model: "gpt-5",
         response_format: { type: "json_object" },
       });
 
