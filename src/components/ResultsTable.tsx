@@ -28,6 +28,7 @@ interface ResultsTableProps {
   hourlyWage?: number;
   onEmployeeUpdate?: (employee: string) => void;
   onEntriesUpdate: (entries: TimesheetEntry[]) => void;
+  sourceLabel?: string | undefined;
 }
 
 export function ResultsTable({
@@ -36,6 +37,7 @@ export function ResultsTable({
   hourlyWage = 0,
   onEmployeeUpdate,
   onEntriesUpdate,
+  sourceLabel,
 }: ResultsTableProps) {
   const [editingRow, setEditingRow] = useState<null | number>(null);
   const [editData, setEditData] = useState<null | TimesheetEntry>(null);
@@ -294,10 +296,6 @@ export function ResultsTable({
 
   const totalWage = totalHours * hourlyWage;
 
-  if (entries.length === 0) {
-    return null;
-  }
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -310,6 +308,11 @@ export function ResultsTable({
             </Badge>
             {hourlyWage > 0 && (
               <Badge variant="outline">Lohn: €{totalWage.toFixed(2)}</Badge>
+            )}
+            {sourceLabel && (
+              <Badge title={sourceLabel} variant="outline">
+                {sourceLabel}
+              </Badge>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -381,99 +384,115 @@ export function ResultsTable({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Startzeit</TableHead>
-                <TableHead>Endzeit</TableHead>
-                <TableHead>Dauer</TableHead>
-                <TableHead className="w-[100px]">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    {editingRow === index ? (
-                      <Input
-                        className="w-24"
-                        onChange={(e) => {
-                          setEditData((prev) =>
-                            prev ? { ...prev, date: e.target.value } : null,
-                          );
-                        }}
-                        value={editData?.date || ""}
-                      />
-                    ) : (
-                      entry.date
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingRow === index ? (
-                      <Input
-                        className="w-20"
-                        onChange={(e) => {
-                          setEditData((prev) =>
-                            prev
-                              ? { ...prev, startTime: e.target.value }
-                              : null,
-                          );
-                        }}
-                        value={editData?.startTime || ""}
-                      />
-                    ) : (
-                      entry.startTime
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingRow === index ? (
-                      <Input
-                        className="w-20"
-                        onChange={(e) => {
-                          setEditData((prev) =>
-                            prev ? { ...prev, endTime: e.target.value } : null,
-                          );
-                        }}
-                        value={editData?.endTime || ""}
-                      />
-                    ) : (
-                      entry.endTime
-                    )}
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {editingRow === index && editData
-                      ? calculateDuration(editData.startTime, editData.endTime)
-                      : entry.duration}
-                  </TableCell>
-                  <TableCell>
-                    {editingRow === index ? (
-                      <div className="flex gap-1">
-                        <Button onClick={saveEdit} size="sm" variant="ghost">
-                          <Check size={16} />
-                        </Button>
-                        <Button onClick={cancelEdit} size="sm" variant="ghost">
-                          <X size={16} />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          startEdit(index);
-                        }}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <PencilSimple size={16} />
-                      </Button>
-                    )}
-                  </TableCell>
+        {entries.length === 0 ? (
+          <div className="rounded-md border p-6 text-center text-muted-foreground">
+            Keine Einträge erkannt. Überprüfen Sie das Bild oder passen Sie den
+            Mitarbeiter oben an.
+          </div>
+        ) : (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Startzeit</TableHead>
+                  <TableHead>Endzeit</TableHead>
+                  <TableHead>Dauer</TableHead>
+                  <TableHead className="w-[100px]">Aktionen</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {editingRow === index ? (
+                        <Input
+                          className="w-24"
+                          onChange={(e) => {
+                            setEditData((prev) =>
+                              prev ? { ...prev, date: e.target.value } : null,
+                            );
+                          }}
+                          value={editData?.date || ""}
+                        />
+                      ) : (
+                        entry.date
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingRow === index ? (
+                        <Input
+                          className="w-20"
+                          onChange={(e) => {
+                            setEditData((prev) =>
+                              prev
+                                ? { ...prev, startTime: e.target.value }
+                                : null,
+                            );
+                          }}
+                          value={editData?.startTime || ""}
+                        />
+                      ) : (
+                        entry.startTime
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingRow === index ? (
+                        <Input
+                          className="w-20"
+                          onChange={(e) => {
+                            setEditData((prev) =>
+                              prev
+                                ? { ...prev, endTime: e.target.value }
+                                : null,
+                            );
+                          }}
+                          value={editData?.endTime || ""}
+                        />
+                      ) : (
+                        entry.endTime
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {editingRow === index && editData
+                        ? calculateDuration(
+                            editData.startTime,
+                            editData.endTime,
+                          )
+                        : entry.duration}
+                    </TableCell>
+                    <TableCell>
+                      {editingRow === index ? (
+                        <div className="flex gap-1">
+                          <Button onClick={saveEdit} size="sm" variant="ghost">
+                            <Check size={16} />
+                          </Button>
+                          <Button
+                            onClick={cancelEdit}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            startEdit(index);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          <PencilSimple size={16} />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

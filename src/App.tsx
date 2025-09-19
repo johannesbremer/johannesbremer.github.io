@@ -23,6 +23,7 @@ import { getWage } from "@/lib/wage";
 interface EmployeeData {
   employee: null | string;
   entries: TimesheetEntry[];
+  sourceLabel?: string;
 }
 
 function App() {
@@ -96,22 +97,18 @@ function App() {
 
           const processedEntries = processTimesheetEntries(result.entries);
 
-          // Find existing employee data or create new one
-          let employeeDataEntry = employeeResults.find(
-            (data) =>
-              data.employee === result.detectedEmployee ||
-              (!data.employee && !result.detectedEmployee),
-          );
-
-          if (!employeeDataEntry) {
-            employeeDataEntry = {
-              employee: result.detectedEmployee,
-              entries: [],
-            };
-            employeeResults.push(employeeDataEntry);
+          if (processedEntries.length === 0) {
+            toast.warning(
+              `Keine Einträge in ${image.name} gefunden – Tabelle wird dennoch angezeigt`,
+            );
           }
 
-          employeeDataEntry.entries.push(...processedEntries);
+          // Always create one group per file
+          employeeResults.push({
+            employee: result.detectedEmployee,
+            entries: processedEntries,
+            sourceLabel: image.name,
+          });
           processedCount++;
 
           toast.success(
@@ -245,6 +242,7 @@ function App() {
               onEntriesUpdate={(entries) => {
                 updateEmployeeEntries(index, entries);
               }}
+              sourceLabel={data.sourceLabel}
             />
           ))}
         </div>
