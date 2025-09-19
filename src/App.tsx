@@ -203,7 +203,7 @@ function App() {
               variant="outline"
             >
               <CurrencyEur className="mr-2" size={16} />
-              Lohn: €{hourlyWage.toFixed(2)}/Std
+              Lohn: {hourlyWage.toFixed(2)}€
             </Button>
           </div>
         </header>
