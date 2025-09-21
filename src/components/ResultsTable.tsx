@@ -109,10 +109,14 @@ export function ResultsTable({
   };
 
   const openInNewTab = () => {
-    const newWindow = window.open("", "_blank");
-    if (!newWindow) {
-      return;
+    // Recalculate totals locally to avoid any closure/ordering issues
+    let localTotalHours = 0;
+    for (const entry of entries) {
+      if (entry.duration) {
+        localTotalHours += parseDurationToHours(entry.duration);
+      }
     }
+    const localTotalWage = localTotalHours * hourlyWage;
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -221,7 +225,7 @@ export function ResultsTable({
                     <strong>Mitarbeiter:</strong> ${employee || "Unbekannt"}
                 </div>
                 <div class="metadata-item">
-                    <strong>Gesamt:</strong> ${Math.floor(totalHours)}:${((totalHours % 1) * 60).toFixed(0).padStart(2, "0")} Stunden
+                    <strong>Gesamt:</strong> ${Math.floor(localTotalHours)}:${((localTotalHours % 1) * 60).toFixed(0).padStart(2, "0")} Stunden
                 </div>
                 ${
                   hourlyWage > 0
@@ -230,7 +234,7 @@ export function ResultsTable({
                     <strong>Stundenlohn:</strong> €${hourlyWage.toFixed(2)}
                 </div>
                 <div class="metadata-item accent">
-                    <strong>Gesamtlohn:</strong> €${totalWage.toFixed(2)}
+                    <strong>Gesamtlohn:</strong> €${localTotalWage.toFixed(2)}
                 </div>
                 `
                     : ""
@@ -282,9 +286,26 @@ export function ResultsTable({
 </body>
 </html>`;
 
-    newWindow.document.open();
-    newWindow.document.documentElement.innerHTML = htmlContent;
-    newWindow.document.close();
+    // Prefer Blob URL to avoid DOM writing quirks; no deprecated APIs
+    try {
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (win) {
+        // Revoke after a short delay to ensure the browser has loaded the content
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 10000);
+      } else {
+        // If popups are blocked, clean up and inform via console.
+        URL.revokeObjectURL(url);
+        console.warn(
+          "Popup was blocked. Please allow popups for this site to open the export in a new tab.",
+        );
+      }
+    } catch (error) {
+      console.error("Failed to open export tab:", error);
+    }
   };
 
   let totalHours = 0;
