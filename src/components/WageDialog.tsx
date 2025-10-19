@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import { useEffect } from "react";
 import { toast } from "sonner";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getWage, setWage } from "@/lib/wage";
 
 interface WageDialogProps {
@@ -18,13 +25,36 @@ interface WageDialogProps {
   open: boolean;
 }
 
+const formSchema = z.object({
+  wage: z
+    .number({ message: "Bitte geben Sie einen gültigen Lohnbetrag ein" })
+    .min(0, "Der Lohn muss mindestens 0 sein")
+    .nonnegative("Der Lohn kann nicht negativ sein"),
+});
+
 export function WageDialog({
   onOpenChange,
   onWageUpdate,
   open,
 }: WageDialogProps) {
-  const [wageValue, setWageValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const form = useForm({
+    defaultValues: {
+      wage: 0,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await setWage(value.wage);
+        onWageUpdate(value.wage);
+        onOpenChange(false);
+        toast.success("Stundenlohn erfolgreich gespeichert");
+      } catch {
+        toast.error("Fehler beim Speichern des Lohns");
+      }
+    },
+    validators: {
+      onSubmit: formSchema,
+    },
+  });
 
   useEffect(() => {
     if (open) {
@@ -35,36 +65,9 @@ export function WageDialog({
   const loadWage = async () => {
     try {
       const wage = await getWage();
-      setWageValue(wage.toString());
+      form.setFieldValue("wage", wage);
     } catch {
       toast.error("Fehler beim Laden des Lohns");
-    }
-  };
-
-  const handleSave = async () => {
-    const numericWage = Number.parseFloat(wageValue);
-
-    if (Number.isNaN(numericWage) || numericWage < 0) {
-      toast.error("Bitte geben Sie einen gültigen Lohnbetrag ein");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await setWage(numericWage);
-      onWageUpdate(numericWage);
-      onOpenChange(false);
-      toast.success("Stundenlohn erfolgreich gespeichert");
-    } catch {
-      toast.error("Fehler beim Speichern des Lohns");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      void handleSave();
     }
   };
 
@@ -75,44 +78,73 @@ export function WageDialog({
           <DialogTitle>Stundenlohn festlegen</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="wage-amount">Stundenlohn</Label>
-            <Input
-              disabled={isLoading}
-              id="wage-amount"
-              min="0"
-              onChange={(e) => {
-                setWageValue(e.target.value);
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void form.handleSubmit();
+          }}
+        >
+          <div className="space-y-4">
+            <form.Field name="wage">
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>Stundenlohn</FieldLabel>
+                    <Input
+                      aria-invalid={isInvalid}
+                      id={field.name}
+                      min="0"
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.handleChange(
+                          value === "" ? 0 : Number.parseFloat(value),
+                        );
+                      }}
+                      placeholder="Stundenlohn eingeben (z.B. 25,50)"
+                      step="0.01"
+                      type="number"
+                      value={field.state.value}
+                    />
+                    <FieldDescription>
+                      Geben Sie Ihren Stundenlohn in Euro ein.
+                    </FieldDescription>
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
               }}
-              onKeyDown={handleKeyDown}
-              placeholder="Stundenlohn eingeben (z.B. 25,50)"
-              step="0.01"
-              type="number"
-              value={wageValue}
-            />
-          </div>
+            </form.Field>
 
-          <div className="flex gap-2">
-            <Button
-              className="flex-1"
-              disabled={isLoading || !wageValue.trim()}
-              onClick={() => void handleSave()}
-            >
-              Lohn speichern
-            </Button>
-            <Button
-              className="flex-1"
-              disabled={isLoading}
-              onClick={() => {
-                onOpenChange(false);
-              }}
-              variant="outline"
-            >
-              Abbrechen
-            </Button>
+            <div className="flex gap-2">
+              <form.Subscribe>
+                {(state) => (
+                  <Button
+                    className="flex-1"
+                    disabled={state.isSubmitting || !state.canSubmit}
+                    type="submit"
+                  >
+                    {state.isSubmitting ? "Speichern..." : "Lohn speichern"}
+                  </Button>
+                )}
+              </form.Subscribe>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+                type="button"
+                variant="outline"
+              >
+                Abbrechen
+              </Button>
+            </div>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

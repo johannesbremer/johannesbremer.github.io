@@ -1,6 +1,8 @@
 import { PlusIcon as Plus, TrashIcon as Trash } from "@phosphor-icons/react";
+import { useForm } from "@tanstack/react-form";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   addEmployee,
   type Employee,
@@ -24,20 +26,80 @@ interface EmployeeManagementDialogProps {
   open: boolean;
 }
 
+const employeeSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Mitarbeitername ist erforderlich")
+    .min(2, "Name muss mindestens 2 Zeichen lang sein")
+    .max(100, "Name darf maximal 100 Zeichen lang sein"),
+});
+
 export function EmployeeManagementDialog({
   onOpenChange,
   open,
 }: EmployeeManagementDialogProps) {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [newEmployeeName, setNewEmployeeName] = useState("");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Form for adding new employees
+  const addForm = useForm({
+    defaultValues: {
+      name: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const newEmployee = await addEmployee(value.name);
+        setEmployees((prev) => [...prev, newEmployee]);
+        addForm.reset();
+        toast.success("Mitarbeiter erfolgreich hinzugefügt");
+      } catch {
+        toast.error("Fehler beim Hinzufügen des Mitarbeiters");
+      }
+    },
+    validators: {
+      onSubmit: employeeSchema,
+    },
+  });
+
+  // Form for editing existing employees
+  const editForm = useForm({
+    defaultValues: {
+      name: "",
+    },
+    onSubmit: async ({ value }) => {
+      if (!editingEmployee) {
+        return;
+      }
+
+      try {
+        await updateEmployee(editingEmployee.id, value.name);
+        setEmployees((prev) =>
+          prev.map((emp) =>
+            emp.id === editingEmployee.id ? { ...emp, name: value.name } : emp,
+          ),
+        );
+        setEditingEmployee(null);
+        toast.success("Mitarbeiter erfolgreich aktualisiert");
+      } catch {
+        toast.error("Fehler beim Aktualisieren des Mitarbeiters");
+      }
+    },
+    validators: {
+      onSubmit: employeeSchema,
+    },
+  });
 
   useEffect(() => {
     if (open) {
       void loadEmployees();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (editingEmployee) {
+      editForm.setFieldValue("name", editingEmployee.name);
+    }
+  }, [editingEmployee]);
 
   const loadEmployees = async () => {
     try {
@@ -48,68 +110,13 @@ export function EmployeeManagementDialog({
     }
   };
 
-  const handleAddEmployee = async () => {
-    if (!newEmployeeName.trim()) {
-      toast.error("Mitarbeitername ist erforderlich");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const newEmployee = await addEmployee(newEmployeeName);
-      setEmployees((prev) => [...prev, newEmployee]);
-      setNewEmployeeName("");
-      toast.success("Mitarbeiter erfolgreich hinzugefügt");
-    } catch {
-      toast.error("Fehler beim Hinzufügen des Mitarbeiters");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleRemoveEmployee = async (id: string) => {
-    setIsLoading(true);
     try {
       await removeEmployee(id);
       setEmployees((prev) => prev.filter((emp) => emp.id !== id));
       toast.success("Mitarbeiter erfolgreich entfernt");
     } catch {
       toast.error("Fehler beim Entfernen des Mitarbeiters");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdateEmployee = async () => {
-    if (!editingEmployee?.name.trim()) {
-      toast.error("Mitarbeitername ist erforderlich");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await updateEmployee(editingEmployee.id, editingEmployee.name);
-      setEmployees((prev) =>
-        prev.map((emp) =>
-          emp.id === editingEmployee.id ? editingEmployee : emp,
-        ),
-      );
-      setEditingEmployee(null);
-      toast.success("Mitarbeiter erfolgreich aktualisiert");
-    } catch {
-      toast.error("Fehler beim Aktualisieren des Mitarbeiters");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      if (editingEmployee) {
-        void handleUpdateEmployee();
-      } else {
-        void handleAddEmployee();
-      }
     }
   };
 
@@ -124,29 +131,52 @@ export function EmployeeManagementDialog({
           {/* Add new employee */}
           <div className="space-y-3 p-4 border rounded-lg">
             <h3 className="font-medium">Neuen Mitarbeiter hinzufügen</h3>
-            <div className="space-y-2">
-              <div>
-                <Label htmlFor="employee-name">Name *</Label>
-                <Input
-                  disabled={isLoading}
-                  id="employee-name"
-                  onChange={(e) => {
-                    setNewEmployeeName(e.target.value);
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void addForm.handleSubmit();
+              }}
+            >
+              <div className="space-y-2">
+                <addForm.Field name="name">
+                  {(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Name *</FieldLabel>
+                        <Input
+                          aria-invalid={isInvalid}
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="Mitarbeitername eingeben"
+                          value={field.state.value}
+                        />
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
+                      </Field>
+                    );
                   }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Mitarbeitername eingeben"
-                  value={newEmployeeName}
-                />
+                </addForm.Field>
+                <addForm.Subscribe>
+                  {(state) => (
+                    <Button
+                      className="w-full"
+                      disabled={state.isSubmitting || !state.canSubmit}
+                      type="submit"
+                    >
+                      <Plus className="mr-2" size={16} />
+                      Mitarbeiter hinzufügen
+                    </Button>
+                  )}
+                </addForm.Subscribe>
               </div>
-              <Button
-                className="w-full"
-                disabled={isLoading || !newEmployeeName.trim()}
-                onClick={() => void handleAddEmployee()}
-              >
-                <Plus className="mr-2" size={16} />
-                Mitarbeiter hinzufügen
-              </Button>
-            </div>
+            </form>
           </div>
 
           {/* Employee list */}
@@ -166,39 +196,66 @@ export function EmployeeManagementDialog({
                     key={employee.id}
                   >
                     {editingEmployee?.id === employee.id ? (
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          disabled={isLoading}
-                          onChange={(e) => {
-                            setEditingEmployee({
-                              ...editingEmployee,
-                              name: e.target.value,
-                            });
+                      <form
+                        className="flex-1 space-y-2"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void editForm.handleSubmit();
+                        }}
+                      >
+                        <editForm.Field name="name">
+                          {(field) => {
+                            const isInvalid =
+                              field.state.meta.isTouched &&
+                              !field.state.meta.isValid;
+                            return (
+                              <Field data-invalid={isInvalid}>
+                                <Input
+                                  aria-invalid={isInvalid}
+                                  id={field.name}
+                                  name={field.name}
+                                  onBlur={field.handleBlur}
+                                  onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                  }}
+                                  placeholder="Mitarbeitername"
+                                  value={field.state.value}
+                                />
+                                {isInvalid && (
+                                  <FieldError
+                                    errors={field.state.meta.errors}
+                                  />
+                                )}
+                              </Field>
+                            );
                           }}
-                          onKeyDown={handleKeyDown}
-                          placeholder="Mitarbeitername"
-                          value={editingEmployee.name}
-                        />
+                        </editForm.Field>
                         <div className="flex gap-2">
+                          <editForm.Subscribe>
+                            {(state) => (
+                              <Button
+                                disabled={
+                                  state.isSubmitting || !state.canSubmit
+                                }
+                                size="sm"
+                                type="submit"
+                              >
+                                Speichern
+                              </Button>
+                            )}
+                          </editForm.Subscribe>
                           <Button
-                            disabled={isLoading}
-                            onClick={() => void handleUpdateEmployee()}
-                            size="sm"
-                          >
-                            Speichern
-                          </Button>
-                          <Button
-                            disabled={isLoading}
                             onClick={() => {
                               setEditingEmployee(null);
                             }}
                             size="sm"
+                            type="button"
                             variant="outline"
                           >
                             Abbrechen
                           </Button>
                         </div>
-                      </div>
+                      </form>
                     ) : (
                       <>
                         <div
@@ -210,7 +267,6 @@ export function EmployeeManagementDialog({
                           <div className="font-medium">{employee.name}</div>
                         </div>
                         <Button
-                          disabled={isLoading}
                           onClick={() => void handleRemoveEmployee(employee.id)}
                           size="sm"
                           variant="outline"
