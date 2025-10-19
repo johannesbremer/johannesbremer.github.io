@@ -16,6 +16,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.52",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@octokit/core": "^7.0.5",
@@ -50,6 +51,7 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-query": "^5.89.0",
+    "ai": "^5.0.76",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
