@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-// Test the Zod schema structure used in openai.ts
+// Test the Zod schema structure used in api.ts
 describe("processTimesheetImages schema", () => {
   // Zod schema for timesheet entries
   const timesheetEntrySchema = z.object({
