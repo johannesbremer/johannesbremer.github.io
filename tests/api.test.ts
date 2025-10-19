@@ -92,15 +92,11 @@ describe("processTimesheetImages schema", () => {
         },
         {
           employee: "Carol White",
-          entries: [
-            { date: "10.04.24", endTime: "16:00", startTime: "08:00" },
-          ],
+          entries: [{ date: "10.04.24", endTime: "16:00", startTime: "08:00" }],
         },
         {
           employee: null,
-          entries: [
-            { date: "12.04.24", endTime: "15:00", startTime: "07:00" },
-          ],
+          entries: [{ date: "12.04.24", endTime: "15:00", startTime: "07:00" }],
         },
       ],
     };
@@ -149,9 +145,7 @@ describe("processTimesheetImages schema", () => {
   it("should allow null employee in image result", () => {
     const validImageResult = {
       employee: null,
-      entries: [
-        { date: "20.05.24", endTime: "14:00", startTime: "06:00" },
-      ],
+      entries: [{ date: "20.05.24", endTime: "14:00", startTime: "06:00" }],
     };
 
     const result = imageResultSchema.safeParse(validImageResult);
@@ -161,4 +155,3 @@ describe("processTimesheetImages schema", () => {
     }
   });
 });
-

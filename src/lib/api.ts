@@ -30,12 +30,11 @@ export async function processTimesheetImages(
 ): Promise<{ detectedEmployee: null | string; entries: TimesheetEntry[] }[]> {
   const openai = createOpenAI({
     apiKey,
-    compatibility: "strict",
   });
 
-  // Convert all images to base64
-  const base64Images = await Promise.all(
-    imageFiles.map((file) => fileToBase64(file)),
+  // Convert all images to ArrayBuffer for AI SDK
+  const imageBuffers = await Promise.all(
+    imageFiles.map((file) => file.arrayBuffer()),
   );
 
   const employeeList =
@@ -70,15 +69,15 @@ Gib die Ergebnisse für alle ${imageFiles.length} Bilder in der GLEICHEN Reihenf
         {
           content: [
             { text: prompt, type: "text" },
-            ...imageFiles.map((file, index) => ({
-              image: base64Images[index] ?? "",
+            ...imageFiles.map((_, index) => ({
+              image: imageBuffers[index] ?? new ArrayBuffer(0),
               type: "image" as const,
             })),
           ],
           role: "user",
         },
       ],
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       schema: batchResultSchema,
       schemaDescription: "Analysis results for multiple timesheet images",
       schemaName: "TimesheetBatchAnalysis",
@@ -110,18 +109,4 @@ Gib die Ergebnisse für alle ${imageFiles.length} Bilder in der GLEICHEN Reihenf
       `Fehler beim Verarbeiten der Bilder: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`,
     );
   }
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      const result = reader.result as string;
-      resolve(result);
-    });
-    reader.addEventListener("error", () => {
-      reject(new Error("Dateilesefehler"));
-    });
-    reader.readAsDataURL(file);
-  });
 }

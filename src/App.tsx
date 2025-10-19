@@ -13,9 +13,9 @@ import { ResultsTable } from "@/components/ResultsTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { WageDialog } from "@/components/WageDialog";
+import { processTimesheetImages } from "@/lib/api";
 import { getApiKey, setApiKey } from "@/lib/api-key";
 import { getEmployees } from "@/lib/employees";
-import { processTimesheetImages } from "@/lib/openai";
 import { processTimesheetEntries, type TimesheetEntry } from "@/lib/timesheet";
 import { getWage } from "@/lib/wage";
 
@@ -88,9 +88,13 @@ function App() {
 
     try {
       const employees = await getEmployees();
-      
+
       // Process all images in a single batch API call
-      const results = await processTimesheetImages(apiKey, selectedImages, employees);
+      const results = await processTimesheetImages(
+        apiKey,
+        selectedImages,
+        employees,
+      );
 
       const employeeResults: EmployeeData[] = [];
       let processedCount = 0;
