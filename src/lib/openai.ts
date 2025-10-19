@@ -1,93 +1,113 @@
-import OpenAI from "openai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 import type { Employee } from "./employees";
 import type { TimesheetEntry } from "./timesheet";
 
-export async function processTimesheetImage(
+// Zod schema for timesheet entries
+const timesheetEntrySchema = z.object({
+  date: z.string(),
+  endTime: z.string(),
+  startTime: z.string(),
+});
+
+// Zod schema for a single image result
+const imageResultSchema = z.object({
+  employee: z.string().nullable(),
+  entries: z.array(timesheetEntrySchema),
+});
+
+// Zod schema for batch processing results
+const batchResultSchema = z.object({
+  images: z.array(imageResultSchema),
+});
+
+export async function processTimesheetImages(
   apiKey: string,
-  imageFile: File,
+  imageFiles: File[],
   employees: Employee[],
-): Promise<{ detectedEmployee: null | string; entries: TimesheetEntry[] }> {
-  const openai = new OpenAI({
+): Promise<{ detectedEmployee: null | string; entries: TimesheetEntry[] }[]> {
+  const openai = createOpenAI({
     apiKey,
-    dangerouslyAllowBrowser: true,
+    compatibility: "strict",
   });
 
-  // Convert image to base64
-  const base64Image = await fileToBase64(imageFile);
+  // Convert all images to base64
+  const base64Images = await Promise.all(
+    imageFiles.map((file) => fileToBase64(file)),
+  );
 
-  const prompt = `Du bist ein präzises OCR-System. Analysiere dieses Zeitnachweis-Bild und extrahiere NUR die ausgefüllten Datenzeilen.
+  const employeeList =
+    employees.length > 0
+      ? employees.map((emp) => emp.name).join(", ")
+      : "keine Mitarbeiterliste verfügbar";
 
-Gib ein JSON-Objekt mit dieser exakten Struktur zurück:
-{
-  "entries": [
-    {
-      "date": "DD.MM.YY",
-      "startTime": "HH:MM", 
-      "endTime": "HH:MM"
-    }
-  ]
-}
+  const exclusionHint =
+    employees.length === imageFiles.length && employees.length > 2
+      ? `- WICHTIG: Wenn du nur ${employees.length - 1} von ${imageFiles.length} Mitarbeitern klar identifizieren kannst, nutze Ausschlussverfahren für das letzte Bild`
+      : "";
 
-Regeln:
-1. Extrahiere nur Zeilen mit tatsächlichen Zeiteinträgen (ignoriere leere Zeilen)
-2. Konvertiere alle Daten ins Format DD.MM.YY
-3. Konvertiere alle Uhrzeiten ins Format HH:MM (24-Stunden)
-4. Gib NUR gültiges JSON zurück, keine Erklärungen
-5. Falls du eine Zeit nicht klar lesen kannst, verwende "00:00" als Platzhalter`;
+  const prompt = `Du bist ein präzises OCR-System. Analysiere ALLE ${imageFiles.length} Zeitnachweis-Bilder und extrahiere die Daten.
+
+Verfügbare Mitarbeiter: ${employeeList}
+
+Für JEDES Bild:
+1. Identifiziere den Mitarbeiter (Name, Unterschrift, Mitarbeiter-ID)
+   - Gib den EXAKTEN Namen aus der Mitarbeiterliste zurück, falls vorhanden
+   - Gib null zurück, falls nicht identifizierbar
+   ${exclusionHint}
+2. Extrahiere NUR ausgefüllte Zeiteinträge (ignoriere leere Zeilen)
+3. Konvertiere Daten zu DD.MM.YY Format
+4. Konvertiere Zeiten zu HH:MM Format (24-Stunden)
+5. Verwende "00:00" als Platzhalter für unleserliche Zeiten
+
+Gib die Ergebnisse für alle ${imageFiles.length} Bilder in der GLEICHEN Reihenfolge zurück wie sie präsentiert wurden.`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const { object } = await generateObject({
       messages: [
         {
           content: [
             { text: prompt, type: "text" },
-            {
-              image_url: {
-                detail: "high",
-                url: `data:${imageFile.type};base64,${base64Image}`,
-              },
-              type: "image_url",
-            },
+            ...imageFiles.map((file, index) => ({
+              image: base64Images[index] ?? "",
+              type: "image" as const,
+            })),
           ],
           role: "user",
         },
       ],
-      model: "gpt-5",
-      response_format: { type: "json_object" },
+      model: openai("gpt-4o"),
+      schema: batchResultSchema,
+      schemaDescription: "Analysis results for multiple timesheet images",
+      schemaName: "TimesheetBatchAnalysis",
     });
 
-    const firstChoice = response.choices[0];
-    const result = firstChoice?.message ? firstChoice.message.content : null;
-    if (!result) {
-      throw new Error("Keine Antwort von OpenAI");
-    }
+    // Process and match employees
+    return object.images.map((imageResult) => {
+      let detectedEmployee: null | string = null;
 
-    const parsed: unknown = JSON.parse(result);
-    if (!parsed || typeof parsed !== "object" || !("entries" in parsed)) {
-      throw new Error("Ungültiges Antwortformat von OpenAI");
-    }
-    const entries = (parsed as { entries: unknown }).entries;
-    if (!Array.isArray(entries)) {
-      throw new TypeError("Ungültiges Antwortformat von OpenAI");
-    }
+      if (imageResult.employee) {
+        const employeeName = imageResult.employee.toLowerCase();
+        if (employeeName !== "unknown") {
+          // Find matching employee (case-insensitive)
+          const matchedEmployee = employees.find(
+            (emp) => emp.name.toLowerCase() === employeeName,
+          );
+          detectedEmployee = matchedEmployee ? matchedEmployee.name : null;
+        }
+      }
 
-    // Get employee identification
-    const detectedEmployee = await identifyEmployee(
-      openai,
-      base64Image,
-      imageFile.type,
-      employees,
-    );
-
-    return {
-      detectedEmployee,
-      entries: entries as TimesheetEntry[],
-    };
+      return {
+        detectedEmployee,
+        entries: imageResult.entries as TimesheetEntry[],
+      };
+    });
   } catch (error) {
-    console.error("OpenAI API Fehler:", error);
+    console.error("AI API Fehler:", error);
     throw new Error(
-      `Fehler beim Verarbeiten des Bildes: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`,
+      `Fehler beim Verarbeiten der Bilder: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`,
     );
   }
 }
@@ -97,113 +117,11 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       const result = reader.result as string;
-      const parts = result.split(",");
-      const base64 = parts[1] ?? "";
-      resolve(base64);
+      resolve(result);
     });
     reader.addEventListener("error", () => {
       reject(new Error("Dateilesefehler"));
     });
     reader.readAsDataURL(file);
   });
-}
-
-async function identifyEmployee(
-  openai: OpenAI,
-  base64Image: string,
-  imageType: string,
-  employees: Employee[],
-): Promise<null | string> {
-  if (employees.length === 0) {
-    return null;
-  }
-
-  const employeeList = employees.map((emp) => emp.name).join(", ");
-
-  const prompt = `Schaue dir dieses Zeitnachweis-Bild an und identifiziere, welchem Mitarbeiter es gehört.
-
-Verfügbare Mitarbeiter: ${employeeList}
-
-Gib ein JSON-Objekt mit dieser exakten Struktur zurück:
-{
-  "employee": "exakter_mitarbeiter_name_aus_liste_oder_unknown"
-}
-
-Regeln:
-1. Suche nach Namen, Unterschriften, Mitarbeiter-IDs oder anderen identifizierenden Texten
-2. Gib den EXAKTEN Namen aus der Mitarbeiterliste zurück, falls du eine Übereinstimmung findest
-3. Gib "unknown" zurück, falls du den Mitarbeiter nicht identifizieren kannst oder unsicher bist
-4. Gib NUR gültiges JSON zurück, keine Erklärungen`;
-
-  const maxRetries = 3;
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await openai.chat.completions.create({
-        messages: [
-          {
-            content: [
-              { text: prompt, type: "text" },
-              {
-                image_url: {
-                  detail: "high",
-                  url: `data:${imageType};base64,${base64Image}`,
-                },
-                type: "image_url",
-              },
-            ],
-            role: "user",
-          },
-        ],
-        model: "gpt-5",
-        response_format: { type: "json_object" },
-      });
-
-      const firstChoice = response.choices[0];
-      const result = firstChoice?.message ? firstChoice.message.content : null;
-      if (!result) {
-        throw new Error("Keine Antwort von OpenAI");
-      }
-
-      const parsed: unknown = JSON.parse(result);
-      if (!parsed || typeof parsed !== "object" || !("employee" in parsed)) {
-        throw new Error("Ungültige Mitarbeiter-Identifikationsantwort");
-      }
-      const employeeProp = (parsed as { employee: unknown }).employee;
-      if (typeof employeeProp !== "string") {
-        throw new TypeError("Ungültige Mitarbeiter-Identifikationsantwort");
-      }
-
-      const employeeName = employeeProp.toLowerCase();
-      if (employeeName === "unknown") {
-        return null;
-      }
-
-      // Find matching employee (case-insensitive)
-      const matchedEmployee = employees.find(
-        (emp) => emp.name.toLowerCase() === employeeName,
-      );
-      return matchedEmployee ? matchedEmployee.name : null;
-    } catch (error) {
-      lastError =
-        error instanceof Error ? error : new Error("Unbekannter Fehler");
-      console.warn(
-        `Mitarbeiter-Identifikationsversuch ${attempt} fehlgeschlagen:`,
-        lastError.message,
-      );
-
-      if (attempt === maxRetries) {
-        console.error(
-          "Alle Mitarbeiter-Identifikationsversuche fehlgeschlagen",
-        );
-        return null;
-      }
-
-      // Warten vor erneutem Versuch
-      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
-    }
-  }
-
-  return null;
 }

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { WageDialog } from "@/components/WageDialog";
 import { getApiKey, setApiKey } from "@/lib/api-key";
 import { getEmployees } from "@/lib/employees";
-import { processTimesheetImage } from "@/lib/openai";
+import { processTimesheetImages } from "@/lib/openai";
 import { processTimesheetEntries, type TimesheetEntry } from "@/lib/timesheet";
 import { getWage } from "@/lib/wage";
 
@@ -88,36 +88,34 @@ function App() {
 
     try {
       const employees = await getEmployees();
+      
+      // Process all images in a single batch API call
+      const results = await processTimesheetImages(apiKey, selectedImages, employees);
+
       const employeeResults: EmployeeData[] = [];
       let processedCount = 0;
 
-      for (const image of selectedImages) {
-        try {
-          const result = await processTimesheetImage(apiKey, image, employees);
-
-          const processedEntries = processTimesheetEntries(result.entries);
-
-          if (processedEntries.length === 0) {
-            toast.warning(
-              `Keine Einträge in ${image.name} gefunden – Tabelle wird dennoch angezeigt`,
-            );
-          }
-
-          // Always create one group per file
-          employeeResults.push({
-            employee: result.detectedEmployee,
-            entries: processedEntries,
-            sourceLabel: image.name,
-          });
-          processedCount++;
-
-          toast.success(
-            `${processedCount}/${selectedImages.length} Bilder verarbeitet`,
-          );
-        } catch (error_) {
-          console.error(`Failed to process image ${image.name}:`, error_);
-          toast.error(`Fehler beim Verarbeiten von ${image.name}`);
+      for (const [index, result] of results.entries()) {
+        const image = selectedImages[index];
+        if (!image) {
+          continue;
         }
+
+        const processedEntries = processTimesheetEntries(result.entries);
+
+        if (processedEntries.length === 0) {
+          toast.warning(
+            `Keine Einträge in ${image.name} gefunden – Tabelle wird dennoch angezeigt`,
+          );
+        }
+
+        // Always create one group per file
+        employeeResults.push({
+          employee: result.detectedEmployee,
+          entries: processedEntries,
+          sourceLabel: image.name,
+        });
+        processedCount++;
       }
 
       setEmployeeData(employeeResults);
