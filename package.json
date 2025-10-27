@@ -16,7 +16,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.52",
+    "@ai-sdk/openai": "^2.0.53",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@octokit/core": "^7.0.5",
@@ -62,7 +62,7 @@
     "framer-motion": "^12.23.13",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.545.0",
+    "lucide-react": "^0.548.0",
     "marked": "^16.3.0",
     "next-themes": "^0.4.6",
     "octokit": "^5.0.3",
@@ -109,7 +109,7 @@
     "globals": "^16.4.0",
     "lint": "^0.8.19",
     "prettier": "^3.6.2",
-    "prettier-plugin-curly": "^0.3.2",
+    "prettier-plugin-curly": "^0.4.0",
     "prettier-plugin-packagejson": "^2.5.19",
     "prettier-plugin-sh": "^0.18.0",
     "tailwindcss": "^4.1.13",
