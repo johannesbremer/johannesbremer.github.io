@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
+// Zod schema for timesheet entries
+const timesheetEntrySchema = z.object({
+  date: z.string(),
+  endTime: z.string(),
+  startTime: z.string(),
+});
+
+// Zod schema for a single image result
+const imageResultSchema = z.object({
+  employee: z.string().nullable(),
+  entries: z.array(timesheetEntrySchema),
+});
+
+// Zod schema for batch processing results
+const batchResultSchema = z.object({
+  images: z.array(imageResultSchema),
+});
+
 // Test the Zod schema structure used in api.ts
 describe("processTimesheetImages schema", () => {
-  // Zod schema for timesheet entries
-  const timesheetEntrySchema = z.object({
-    date: z.string(),
-    endTime: z.string(),
-    startTime: z.string(),
-  });
-
-  // Zod schema for a single image result
-  const imageResultSchema = z.object({
-    employee: z.string().nullable(),
-    entries: z.array(timesheetEntrySchema),
-  });
-
-  // Zod schema for batch processing results
-  const batchResultSchema = z.object({
-    images: z.array(imageResultSchema),
-  });
-
   it("should validate a valid batch result with multiple images", () => {
     const validData = {
       images: [
@@ -38,13 +38,11 @@ describe("processTimesheetImages schema", () => {
       ],
     };
 
-    const result = batchResultSchema.safeParse(validData);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.images).toHaveLength(2);
-      expect(result.data.images[0]?.employee).toBe("John Doe");
-      expect(result.data.images[1]?.employee).toBeNull();
-    }
+    const parsed = batchResultSchema.parse(validData);
+
+    expect(parsed.images).toHaveLength(2);
+    expect(parsed.images[0]?.employee).toBe("John Doe");
+    expect(parsed.images[1]?.employee).toBeNull();
   });
 
   it("should reject invalid batch result missing required fields", () => {
@@ -73,11 +71,9 @@ describe("processTimesheetImages schema", () => {
       ],
     };
 
-    const result = batchResultSchema.safeParse(validData);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.images[0]?.entries).toHaveLength(0);
-    }
+    const parsed = batchResultSchema.parse(validData);
+
+    expect(parsed.images[0]?.entries).toHaveLength(0);
   });
 
   it("should validate batch result with multiple images and various employee states", () => {
@@ -101,17 +97,15 @@ describe("processTimesheetImages schema", () => {
       ],
     };
 
-    const result = batchResultSchema.safeParse(validData);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.images).toHaveLength(3);
-      expect(result.data.images[0]?.employee).toBe("Bob Smith");
-      expect(result.data.images[0]?.entries).toHaveLength(2);
-      expect(result.data.images[1]?.employee).toBe("Carol White");
-      expect(result.data.images[1]?.entries).toHaveLength(1);
-      expect(result.data.images[2]?.employee).toBeNull();
-      expect(result.data.images[2]?.entries).toHaveLength(1);
-    }
+    const parsed = batchResultSchema.parse(validData);
+
+    expect(parsed.images).toHaveLength(3);
+    expect(parsed.images[0]?.employee).toBe("Bob Smith");
+    expect(parsed.images[0]?.entries).toHaveLength(2);
+    expect(parsed.images[1]?.employee).toBe("Carol White");
+    expect(parsed.images[1]?.entries).toHaveLength(1);
+    expect(parsed.images[2]?.employee).toBeNull();
+    expect(parsed.images[2]?.entries).toHaveLength(1);
   });
 
   it("should accept timesheet entries with correct format", () => {
@@ -121,8 +115,11 @@ describe("processTimesheetImages schema", () => {
       startTime: "08:15",
     };
 
-    const result = timesheetEntrySchema.safeParse(validEntry);
-    expect(result.success).toBe(true);
+    const parsed = timesheetEntrySchema.parse(validEntry);
+
+    expect(parsed.date).toBe("25.12.24");
+    expect(parsed.startTime).toBe("08:15");
+    expect(parsed.endTime).toBe("18:45");
   });
 
   it("should validate image result schema", () => {
@@ -134,12 +131,10 @@ describe("processTimesheetImages schema", () => {
       ],
     };
 
-    const result = imageResultSchema.safeParse(validImageResult);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.employee).toBe("Alice Johnson");
-      expect(result.data.entries).toHaveLength(2);
-    }
+    const parsed = imageResultSchema.parse(validImageResult);
+
+    expect(parsed.employee).toBe("Alice Johnson");
+    expect(parsed.entries).toHaveLength(2);
   });
 
   it("should allow null employee in image result", () => {
@@ -148,10 +143,8 @@ describe("processTimesheetImages schema", () => {
       entries: [{ date: "20.05.24", endTime: "14:00", startTime: "06:00" }],
     };
 
-    const result = imageResultSchema.safeParse(validImageResult);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.employee).toBeNull();
-    }
+    const parsed = imageResultSchema.parse(validImageResult);
+
+    expect(parsed.employee).toBeNull();
   });
 });
