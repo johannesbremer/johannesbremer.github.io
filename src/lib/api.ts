@@ -99,8 +99,6 @@ Gib die Ergebnisse für alle ${imageFiles.length} Bilder in der GLEICHEN Reihenf
         name: "TimesheetBatchAnalysis",
         schema: batchResultSchema,
       }),
-
-      temperature: 0,
     });
 
     // Validate array length alignment
