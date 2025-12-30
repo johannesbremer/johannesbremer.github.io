@@ -30,9 +30,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
             Error Details:
           </h3>
           <pre className="text-xs text-destructive bg-muted/50 p-3 rounded border overflow-auto max-h-32">
-            {typeof error === "object" && error && "message" in error
-              ? (error as Error).message
-              : `${error}`}
+            {error instanceof Error ? error.message : String(error)}
           </pre>
         </div>
 
