@@ -1,3 +1,4 @@
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useForm } from "@tanstack/react-form";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -76,6 +78,12 @@ export function WageDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Stundenlohn festlegen</DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              Legen Sie Ihren Stundenlohn für die Berechnung der Arbeitskosten
+              fest.
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <form

@@ -1,4 +1,5 @@
 import { PlusIcon as Plus, TrashIcon as Trash } from "@phosphor-icons/react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useForm } from "@tanstack/react-form";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -125,6 +127,11 @@ export function EmployeeManagementDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Mitarbeiter verwalten</DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              Verwalten Sie die Liste der Mitarbeiter für die Zeiterfassung.
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <div className="space-y-4">
