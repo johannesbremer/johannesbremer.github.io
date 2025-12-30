@@ -2,7 +2,7 @@ import { PlusIcon as Plus, TrashIcon as Trash } from "@phosphor-icons/react";
 import { useForm } from "@tanstack/react-form";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import * as z from "zod";
+import * as z from "zod/v3";
 
 import { Button } from "@/components/ui/button";
 import {

@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import * as z from "zod";
+import * as z from "zod/v3";
 
 import { Button } from "@/components/ui/button";
 import {

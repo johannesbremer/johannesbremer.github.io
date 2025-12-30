@@ -5,7 +5,7 @@ import {
 } from "@phosphor-icons/react";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import * as z from "zod";
+import * as z from "zod/v3";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
